@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ridgeback">
+  <xacro:macro name="ridgeback" params="include_control_plugin:=false">
+    
+    <!-- Ridgeback -->
+    <xacro:include filename="$(find moma_description)/urdf/ridgeback_nocontrol.xacro"/>
+    <xacro:if value="${include_control_plugin}">
+      <xacro:include filename="$(find moma_description)/urdf/ridgeback.gazebo.xacro"/>
+      <xacro:ridgeback_gazebo robot_ns="/mobile_base"/>
+    </xacro:if>
+
+    <!-- Sensor mount -->
+    <link name="ridgeback_sensor_mount_link">
+      <visual>
+        <geometry>
+          <mesh filename="package://moma_description/meshes/ridgeback_sensor_mount.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <mesh filename="package://moma_description/meshes/ridgeback_sensor_mount.dae"/> 
+        </geometry>
+      </collision>
+    </link>
+
+  <joint name="ridgeback_sensor_mount_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 1.571" />
+    <parent link="mid_mount" />
+    <child link="ridgeback_sensor_mount_link" />
+  </joint>
+
+  </xacro:macro>
+</robot>
