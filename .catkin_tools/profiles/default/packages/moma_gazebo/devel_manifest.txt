@@ -1,2 +1,0 @@
-moma/moma_gazebo
-/root/moma_ws/devel/.private/moma_gazebo/cmake.lock /root/moma_ws/devel/./cmake.lock

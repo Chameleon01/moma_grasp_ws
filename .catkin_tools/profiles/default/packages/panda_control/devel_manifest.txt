@@ -1,7 +1,0 @@
-moma/panda_control
-/root/moma_ws/devel/.private/panda_control/cmake.lock /root/moma_ws/devel/./cmake.lock
-/root/moma_ws/devel/.private/panda_control/share/panda_control/cmake/panda_controlConfig.cmake /root/moma_ws/devel/share/panda_control/cmake/panda_controlConfig.cmake
-/root/moma_ws/devel/.private/panda_control/share/panda_control/cmake/panda_controlConfig-version.cmake /root/moma_ws/devel/share/panda_control/cmake/panda_controlConfig-version.cmake
-/root/moma_ws/devel/.private/panda_control/lib/libpanda_control.so /root/moma_ws/devel/lib/libpanda_control.so
-/root/moma_ws/devel/.private/panda_control/lib/pkgconfig/panda_control.pc /root/moma_ws/devel/lib/pkgconfig/panda_control.pc
-/root/moma_ws/devel/.private/panda_control/lib/python3/dist-packages/panda_control/__init__.py /root/moma_ws/devel/lib/python3/dist-packages/panda_control/__init__.py

@@ -1,5 +1,0 @@
-moma/moma_bringup
-/root/moma_ws/devel/.private/moma_bringup/cmake.lock /root/moma_ws/devel/./cmake.lock
-/root/moma_ws/devel/.private/moma_bringup/share/moma_bringup/cmake/moma_bringupConfig.cmake /root/moma_ws/devel/share/moma_bringup/cmake/moma_bringupConfig.cmake
-/root/moma_ws/devel/.private/moma_bringup/share/moma_bringup/cmake/moma_bringupConfig-version.cmake /root/moma_ws/devel/share/moma_bringup/cmake/moma_bringupConfig-version.cmake
-/root/moma_ws/devel/.private/moma_bringup/lib/pkgconfig/moma_bringup.pc /root/moma_ws/devel/lib/pkgconfig/moma_bringup.pc

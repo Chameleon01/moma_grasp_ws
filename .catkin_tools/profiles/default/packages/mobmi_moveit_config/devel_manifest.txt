@@ -1,5 +1,0 @@
-moma/moveit_configs/mobmi_moveit_config
-/root/moma_ws/devel/.private/mobmi_moveit_config/cmake.lock /root/moma_ws/devel/./cmake.lock
-/root/moma_ws/devel/.private/mobmi_moveit_config/share/mobmi_moveit_config/cmake/mobmi_moveit_configConfig-version.cmake /root/moma_ws/devel/share/mobmi_moveit_config/cmake/mobmi_moveit_configConfig-version.cmake
-/root/moma_ws/devel/.private/mobmi_moveit_config/share/mobmi_moveit_config/cmake/mobmi_moveit_configConfig.cmake /root/moma_ws/devel/share/mobmi_moveit_config/cmake/mobmi_moveit_configConfig.cmake
-/root/moma_ws/devel/.private/mobmi_moveit_config/lib/pkgconfig/mobmi_moveit_config.pc /root/moma_ws/devel/lib/pkgconfig/mobmi_moveit_config.pc

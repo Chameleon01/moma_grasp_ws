@@ -1,5 +1,0 @@
-moma/moveit_configs/yumi_moveit_config
-/root/moma_ws/devel/.private/yumi_moveit_config/cmake.lock /root/moma_ws/devel/./cmake.lock
-/root/moma_ws/devel/.private/yumi_moveit_config/share/yumi_moveit_config/cmake/yumi_moveit_configConfig.cmake /root/moma_ws/devel/share/yumi_moveit_config/cmake/yumi_moveit_configConfig.cmake
-/root/moma_ws/devel/.private/yumi_moveit_config/share/yumi_moveit_config/cmake/yumi_moveit_configConfig-version.cmake /root/moma_ws/devel/share/yumi_moveit_config/cmake/yumi_moveit_configConfig-version.cmake
-/root/moma_ws/devel/.private/yumi_moveit_config/lib/pkgconfig/yumi_moveit_config.pc /root/moma_ws/devel/lib/pkgconfig/yumi_moveit_config.pc
