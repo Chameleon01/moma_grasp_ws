@@ -1,0 +1,7 @@
+# Ignore directories
+build/
+devel/
+logs/
+
+# Ignore specific files
+useful_commands.txt

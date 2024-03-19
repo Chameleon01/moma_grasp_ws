@@ -1,0 +1,5 @@
+moma/moveit_configs/panda_moveit_config
+/root/moma_ws/devel/.private/panda_moveit_config/cmake.lock /root/moma_ws/devel/./cmake.lock
+/root/moma_ws/devel/.private/panda_moveit_config/share/panda_moveit_config/cmake/panda_moveit_configConfig.cmake /root/moma_ws/devel/share/panda_moveit_config/cmake/panda_moveit_configConfig.cmake
+/root/moma_ws/devel/.private/panda_moveit_config/share/panda_moveit_config/cmake/panda_moveit_configConfig-version.cmake /root/moma_ws/devel/share/panda_moveit_config/cmake/panda_moveit_configConfig-version.cmake
+/root/moma_ws/devel/.private/panda_moveit_config/lib/pkgconfig/panda_moveit_config.pc /root/moma_ws/devel/lib/pkgconfig/panda_moveit_config.pc
