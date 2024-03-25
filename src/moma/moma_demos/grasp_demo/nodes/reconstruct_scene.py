@@ -84,14 +84,11 @@ class ReconstructSceneNode(object):
         rospy.sleep(1.0)
 
         for joints in scan_joints[1:]:
-            rospy.loginfo("AAAAAA")
             # self.moveit.move_group.set_goal_joint_tolerance(0.1) # meters
             self.moveit.goto(joints, velocity_scaling=0.2)
         self.toggle_integration(std_srvs.srv.SetBoolRequest(data=False))
         
         result = ScanSceneResult()
-        rospy.loginfo("BBBB")
-        rospy.loginfo(result)
 
         msg = self.get_scene_cloud()
         rospy.loginfo("Scene Cloud Service Response: %s", msg)
