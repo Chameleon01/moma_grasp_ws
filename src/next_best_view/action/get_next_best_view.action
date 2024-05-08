@@ -1,0 +1,10 @@
+# Define the goal
+sensor_msgs/Image image
+
+---
+# Define the result
+std_msgs/Float32MultiArray output
+
+---
+# Define the feedback (optional)
+string feedback
