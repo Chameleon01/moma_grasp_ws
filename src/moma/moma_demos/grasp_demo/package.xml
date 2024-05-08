@@ -23,6 +23,7 @@
   <depend>vgn</depend>
 
   <build_depend>message_generation</build_depend>
+  <build_depend>next_best_view</build_depend>
 
   <depend>moma_bringup</depend>
   <depend>moma_description</depend>
@@ -33,6 +34,7 @@
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>rviz</exec_depend>
   <exec_depend>panda_moveit_config</exec_depend>
+  <exec_depend>next_best_view</exec_depend> 
 
   <export>
     <rviz plugin="${prefix}/plugin_description.xml" />

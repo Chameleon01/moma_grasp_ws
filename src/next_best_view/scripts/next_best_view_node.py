@@ -9,6 +9,7 @@ from sensor_msgs.msg import Image
 from zero1to3_predict import load_zero1to3_predictions
 from info_gain_utility import *
 import os
+from next_best_view.msg import GetNextBestViewAction, GetNextBestViewGoal, GetNextBestViewResult
 
 
 # min max scaling of metrics
@@ -19,16 +20,15 @@ def min_max_scale(metrics):
 
 class NextBestView(object):
     def __init__(self):
-        self.server = actionlib.SimpleActionServer('get_next_best_view', Image, self.execute, False)
+        self.server = actionlib.SimpleActionServer('get_next_best_view', GetNextBestViewAction, self.execute, False)
         self.server.start()
         self.bridge = CvBridge()
 
     def execute(self, goal):
         
-        captured_image = self.bridge.imgmsg_to_cv2(goal, "bgr8")
+        captured_image = self.bridge.imgmsg_to_cv2(goal.image, "bgr8")
         # pass imgae to zero 1 to 3
-        if captured_image is not None:
-            cv2.imwrite("captured_image.png", captured_image)
+        cv2.imwrite("captured_image.png", captured_image)
         predictions = load_zero1to3_predictions()
 
         # apply gain information function to each image
@@ -78,8 +78,8 @@ class NextBestView(object):
         output_array = [highest_avg_azimuth, 0, 0]
 
         # Create the result message
-        result = Float32MultiArray()  # Create a result instance
-        result.data = output_array  # Assign the output array to the result message
+        result = GetNextBestViewResult()
+        result.output.data = output_array  # Ensure this matches the name in your action definition
         rospy.loginfo("Processing complete, sending result...")
 
         # Set the result of the action

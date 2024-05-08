@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 import rospy
-from information_gain.msg import zero1to3Image, zero1to3Images
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
 import cv2
 import os
 

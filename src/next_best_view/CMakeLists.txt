@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_action_files(
   DIRECTORY action
-  FILES get_next_best_view.action
+  FILES GetNextBestView.action
 )
 
 generate_messages(
@@ -26,4 +26,11 @@ generate_messages(
   actionlib_msgs
   sensor_msgs
   std_msgs
+)
+
+catkin_package(
+  # INCLUDE_DIRS include  # Uncomment and fill if you have include directories
+  # LIBRARIES ${PROJECT_NAME}  # Uncomment and fill if you compile libraries
+  CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs actionlib actionlib_msgs
+  # DEPENDS system_lib  # Uncomment and fill if you depend on non-ROS system libraries
 )

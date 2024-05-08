@@ -2,10 +2,11 @@
 
 import sys
 
-from actionlib import SimpleActionServer
-from sensor_msgs.msg import PointCloud2
+from actionlib import SimpleActionServer, SimpleActionClient
+from sensor_msgs.msg import Image, PointCloud2
 import rospy
 import std_srvs.srv
+from next_best_view.msg import *
 
 from grasp_demo.msg import ScanSceneAction, ScanSceneResult
 from moma_utils.ros.moveit import MoveItClient
@@ -24,8 +25,12 @@ class ReconstructSceneNode(object):
         else:
             self.init_tsdf_services()
 
+        self.captured_image = None
+
         self.scene_cloud_pub = rospy.Publisher("scene_cloud", PointCloud2, queue_size=1)
         self.map_cloud_pub = rospy.Publisher("map_cloud", PointCloud2, queue_size=1)
+
+        self.image_sub = rospy.Subscriber("/wrist_camera/color/image_raw", Image, self.image_callback)        
 
         self.action_server = SimpleActionServer(
             "scan_action",
@@ -35,6 +40,9 @@ class ReconstructSceneNode(object):
         )
         self.action_server.start()
         rospy.loginfo("Scan action server ready")
+
+    def image_callback(self, data):
+        self.captured_image = data
 
     def init_gsm_services(self):
         self.reset_map = rospy.ServiceProxy(
@@ -78,14 +86,37 @@ class ReconstructSceneNode(object):
 
         self.reset_map()
         self.moveit.goto(scan_joints[0], velocity_scaling=0.2)
+        
+
+        rospy.loginfo("Nex best view planning")
+        # Assuming captured_image is updated and ready to use
+        if self.captured_image is None:
+            rospy.logwarn("No image captured yet")
+            return
+
+        # Setup action client for the 'get_next_best_view' action server
+        client = SimpleActionClient('get_next_best_view', GetNextBestViewAction)
+        client.wait_for_server()
+
+        # Create and send the goal to the action server
+        action_goal = GetNextBestViewGoal()
+        action_goal.image = self.captured_image  # Use the captured image as the goal
+        client.send_goal(action_goal)
+        client.wait_for_result()
+
+        # Get the result from the action server
+        result = client.get_result()
+        if result:
+            rospy.loginfo("Received result array: %s", result.output.data)
+        else:
+            rospy.logwarn("Action did not complete successfully")
+        
 
         rospy.loginfo("Mapping scene")
         self.toggle_integration(std_srvs.srv.SetBoolRequest(data=True))
         rospy.sleep(1.0)
 
-        for joints in scan_joints[1:]:
-            # self.moveit.move_group.set_goal_joint_tolerance(0.1) # meters
-            self.moveit.goto(joints, velocity_scaling=0.2)
+
         self.toggle_integration(std_srvs.srv.SetBoolRequest(data=False))
         
         result = ScanSceneResult()
