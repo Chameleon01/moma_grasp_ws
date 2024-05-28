@@ -6,11 +6,12 @@ import numpy as np
 from cv_bridge import CvBridge, CvBridgeError
 from std_msgs.msg import Float32MultiArray
 from sensor_msgs.msg import Image
-from zero1to3_predict import load_zero1to3_predictions
+from zero1to3_predict import load_zero1to3_predictions, get_img_keys
 from info_gain_utility import *
 import os
 from next_best_view.msg import GetNextBestViewAction, GetNextBestViewGoal, GetNextBestViewResult
-
+import tf
+from std_msgs.msg import Int32
 
 # min max scaling of metrics
 def min_max_scale(metrics):
@@ -23,13 +24,14 @@ class NextBestView(object):
         self.server = actionlib.SimpleActionServer('get_next_best_view', GetNextBestViewAction, self.execute, False)
         self.server.start()
         self.bridge = CvBridge()
+        self.img_count = 8
+        self.img_keys = get_img_keys()
+        self.idx_publisher = rospy.Publisher('/spawn_model_idx', Int32, queue_size=10)
+        rospy.loginfo(f'Image keys: {self.img_keys}')
 
     def execute(self, goal):
-        
-        captured_image = self.bridge.imgmsg_to_cv2(goal.image, "bgr8")
-        # pass imgae to zero 1 to 3
-        cv2.imwrite("captured_image.png", captured_image)
-        predictions = load_zero1to3_predictions()
+        self.idx_publisher.publish(self.img_keys[self.img_count])
+        predictions = load_zero1to3_predictions(n_img=self.img_keys[self.img_count])
 
         # apply gain information function to each image
         ratios = []
@@ -75,15 +77,36 @@ class NextBestView(object):
         highest_avg_azimuth = azimuths[highest_avg_index]
         rospy.loginfo(f'Highest average metric: {max(avg_metrics):.2f} at azimuth: {highest_avg_azimuth:.2f}')
 
-        output_array = [highest_avg_azimuth, 0, 0]
+        # Create the output array
+        # compute translation and rotation
+        alpha = highest_avg_azimuth*(np.pi/180) # convert highest_avg_azimuth in radians
+        alpha = -np.pi/2# 45 degrees
+
+        # translation follow an ellipse
+        a = 0.15 # distance from base to object
+        b = 0.15 # lateral distance
+        t = np.arctan(np.tan(alpha)*a/b)
+        x_trans = a*np.cos(t)
+        y_trans = b*np.sin(t)
+        z_trans = 0
+
+        # shift the frame
+        x_trans -= 0.2
+
+        # rotation rotate around z axis of alpha radians and put in a quaternion
+        q = tf.transformations.quaternion_from_euler(0, 0, alpha)
+
+        output_array = [-x_trans, -y_trans, z_trans, q[0], q[1], q[2], q[3]]
 
         # Create the result message
         result = GetNextBestViewResult()
         result.output.data = output_array  # Ensure this matches the name in your action definition
-        rospy.loginfo("Processing complete, sending result...")
+        rospy.loginfo(f"Processing complete, sending result...{output_array}")
 
         # Set the result of the action
         self.server.set_succeeded(result)
+
+        self.img_count += 1
 
 if __name__ == '__main__':
     rospy.init_node('next_best_view_node')

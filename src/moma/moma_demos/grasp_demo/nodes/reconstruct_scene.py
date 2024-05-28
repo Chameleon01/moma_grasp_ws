@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import numpy as np
 
 from actionlib import SimpleActionServer, SimpleActionClient
 from sensor_msgs.msg import Image, PointCloud2
@@ -10,8 +11,10 @@ from next_best_view.msg import *
 
 from grasp_demo.msg import ScanSceneAction, ScanSceneResult
 from moma_utils.ros.moveit import MoveItClient
+from moma_utils.spatial import Transform, Rotation
 import vpp_msgs.srv
 import vgn.srv
+import tf
 
 
 class ReconstructSceneNode(object):
@@ -112,17 +115,38 @@ class ReconstructSceneNode(object):
             rospy.logwarn("Action did not complete successfully")
         
 
-        rospy.loginfo("Mapping scene")
+        rospy.loginfo("Mapping scene with next best view")
+        trans_rot = result.output.data
+        rospy.loginfo(trans_rot)
+
+        # add trans_rot to current pose
+        curr_pose = np.array([self.moveit.move_group.get_current_pose().pose.position.x, self.moveit.move_group.get_current_pose().pose.position.y, self.moveit.move_group.get_current_pose().pose.position.z])
+        curr_rot = np.array([self.moveit.move_group.get_current_pose().pose.orientation.x, self.moveit.move_group.get_current_pose().pose.orientation.y, self.moveit.move_group.get_current_pose().pose.orientation.z, self.moveit.move_group.get_current_pose().pose.orientation.w])
+        
+         # Update position
+        curr_pose += trans_rot[:3]
+
+        # Update rotation by quaternion multiplication
+        rotation_quat = trans_rot[3:]  # The new rotation quaternion
+        new_rot = tf.transformations.quaternion_multiply(curr_rot, rotation_quat) 
+
+        target_pose = Transform(translation=curr_pose, rotation=Rotation.from_quat(curr_rot))
+        rospy.loginfo(self.moveit.robot.get_link_names())
+        rospy.loginfo(f"curr_pose: {curr_pose}, curr_rot: {trans_rot[3:]}")
+
+        rospy.sleep(4.0)
+
+
         self.toggle_integration(std_srvs.srv.SetBoolRequest(data=True))
         rospy.sleep(1.0)
 
+        self.moveit.goto(target_pose)
 
         self.toggle_integration(std_srvs.srv.SetBoolRequest(data=False))
         
         result = ScanSceneResult()
 
         msg = self.get_scene_cloud()
-        rospy.loginfo("Scene Cloud Service Response: %s", msg)
         self.scene_cloud_pub.publish(msg.scene_cloud)
 
         msg = self.get_map_cloud()

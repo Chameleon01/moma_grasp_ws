@@ -11,7 +11,7 @@ DOCKER=moma_dev
 DOCKERFILE=dev.Dockerfile
 NAME=moma
 BUILD=false
-WORKSPACE=/home/$USER/moma_ws
+WORKSPACE=/home/$USER/moma_grasp_ws
 
 help()
 {
@@ -101,9 +101,9 @@ docker run -it --rm \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     --env="XAUTHORITY=$XAUTH" \
     --volume="$XAUTH:$XAUTH" \
-    --net=host \
     --privileged \
     --name=$NAME \
+    --network host \
     ${DOCKER} \
     bash
 

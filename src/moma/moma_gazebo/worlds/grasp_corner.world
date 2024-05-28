@@ -55,10 +55,10 @@
     </model>
 
     <!-- cocke -->
-    <include>
+    <!-- <include>
       <uri>model://004_sugar_box</uri>
       <pose>0.400022 -0.05 0.2 0.0 0.0 0.0</pose>
-    </include>
+    </include> -->
 
     <!-- Physics -->
     <physics type="ode">

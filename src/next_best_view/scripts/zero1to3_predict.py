@@ -3,12 +3,11 @@ import rospy
 import cv2
 import os
 
-def load_zero1to3_predictions():
+def load_zero1to3_predictions(n_img=1):
     # Path to the images directory
     images_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'img_predictions')
-    n_img = 1
     img_predictions = []
-    for az in range(0, 360, 45):
+    for az in [-80, -60, -40, -20, 0, 20, 40, 60, 80]:
         file_path = f"{images_dir}/output{n_img}.{az}.png"
         rospy.loginfo(f"Loading image: {file_path}")
         image = cv2.imread(file_path)
@@ -17,3 +16,16 @@ def load_zero1to3_predictions():
             img_predictions.append(pred_obj)
 
     return img_predictions
+
+def get_img_keys():
+    # get the file name list in the directory img_predictions 
+    file_names = os.listdir('/root/moma_ws/src/next_best_view/scripts/img_predictions')
+    file_names = [f.split(".") for f in file_names]
+    file_names = [f[0].replace("output", "") for f in file_names]
+    file_names = list(set(file_names))
+    file_names = [int(f) for f in file_names]
+    file_names.sort()
+    
+    return file_names
+    
+
