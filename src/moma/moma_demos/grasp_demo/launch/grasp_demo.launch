@@ -2,7 +2,7 @@
 <launch>
     <!-- Arguments -->
     <arg name="semantic" default="false" doc="use Voxblox++ for semantic scene reconstruction" />
-    <arg name="launch_rviz" default="false"/>
+    <arg name="launch_rviz" default="true"/>
     <arg name="simulation_mode" default="false"/>
 
     <!-- ======== Launch everything ======== -->

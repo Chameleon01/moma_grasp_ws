@@ -1,12 +1,12 @@
 base_frame_id: panda_link0
-ee_grasp_offset_z: -0.00 #-0.04
+ee_grasp_offset_z: -0.04 #-0.04
 
 task_frame_id: task
-table_height: 0.2  # Measured from the base frame specified above
+table_height: 0.5  # Measured from the base frame specified above
 
 workspaces:
 - scan_joints: 
-    - [-0.174533,-1.74533, 0.100, -2.416, 0.089, 1.402, 0.851]
+    - [1.0099570194674232, -1.692222709995713, -0.39451387234134483, -2.676419590979598, -1.2053577622836915, 1.8697722273445159, 1.4881047141400767]
     - [-0.520, -0.796, 0.912, -1.672, 0.091, 1.281, 0.871]
     - [0.092, -0.626, -0.551, -1.837, 0.165, 1.238, 0.900]
   # drop_joints: [0.580, -0.256, -0.151, -2.438, -0.025, 2.206, 1.196]
@@ -19,4 +19,4 @@ workspaces:
 grasp_selection: "auto"  # Choice: manual, auto
 
 arm_velocity_scaling_drop: 0.3
-arm_velocity_scaling_grasp: 0.05
+arm_velocity_scaling_grasp: 0.07

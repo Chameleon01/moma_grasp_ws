@@ -46,7 +46,10 @@ class MoveItClient:
         self.move_group.set_max_velocity_scaling_factor(velocity_scaling)
         self.move_group.set_max_acceleration_scaling_factor(acceleration_scaling)
         plan, _ = self.move_group.compute_cartesian_path(waypoints, 0.01, 0.0)
-        return plan
+        current_state = self.robot.get_current_state()
+        retimed_plan = self.move_group.retime_trajectory(current_state, plan, velocity_scaling_factor=velocity_scaling, acceleration_scaling_factor=acceleration_scaling)
+        
+        return retimed_plan
 
 
     def execute(self, plan):

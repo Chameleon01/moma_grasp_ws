@@ -13,14 +13,14 @@ from std_msgs.msg import Int32  # Import Int32 message type
 
 class ModelSpawner:
     def __init__(self):
-        rospy.init_node('model_spawner')
+        rospy.init_node('evaluation')
         self.rospack = rospkg.RosPack()
         self.package_path = self.rospack.get_path('moma_gazebo')  # Adjust the package name as needed
         self.model_dir_path = f"{self.package_path}/models"
         self.pose = Pose()
-        self.pose.position.x = 0.4
-        self.pose.position.y = -0.05
-        self.pose.position.z = 0.2
+        self.pose.position.x = 0.5
+        self.pose.position.y = 0
+        self.pose.position.z = 0.5
         self.last_model = ""
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber("/wrist_camera/color/image_raw", Image, self.image_callback)

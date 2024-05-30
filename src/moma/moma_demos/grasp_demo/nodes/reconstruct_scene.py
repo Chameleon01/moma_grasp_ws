@@ -92,16 +92,15 @@ class ReconstructSceneNode(object):
         
 
         rospy.loginfo("Nex best view planning")
-        # Assuming captured_image is updated and ready to use
-        if self.captured_image is None:
-            rospy.logwarn("No image captured yet")
-            return
 
         # Setup action client for the 'get_next_best_view' action server
         client = SimpleActionClient('get_next_best_view', GetNextBestViewAction)
         client.wait_for_server()
 
         # Create and send the goal to the action server
+        self.toggle_integration(std_srvs.srv.SetBoolRequest(data=True))
+        rospy.sleep(1.0)
+        
         action_goal = GetNextBestViewGoal()
         action_goal.image = self.captured_image  # Use the captured image as the goal
         client.send_goal(action_goal)
@@ -109,38 +108,9 @@ class ReconstructSceneNode(object):
 
         # Get the result from the action server
         result = client.get_result()
-        if result:
-            rospy.loginfo("Received result array: %s", result.output.data)
-        else:
-            rospy.logwarn("Action did not complete successfully")
-        
 
         rospy.loginfo("Mapping scene with next best view")
         trans_rot = result.output.data
-        rospy.loginfo(trans_rot)
-
-        # add trans_rot to current pose
-        curr_pose = np.array([self.moveit.move_group.get_current_pose().pose.position.x, self.moveit.move_group.get_current_pose().pose.position.y, self.moveit.move_group.get_current_pose().pose.position.z])
-        curr_rot = np.array([self.moveit.move_group.get_current_pose().pose.orientation.x, self.moveit.move_group.get_current_pose().pose.orientation.y, self.moveit.move_group.get_current_pose().pose.orientation.z, self.moveit.move_group.get_current_pose().pose.orientation.w])
-        
-         # Update position
-        curr_pose += trans_rot[:3]
-
-        # Update rotation by quaternion multiplication
-        rotation_quat = trans_rot[3:]  # The new rotation quaternion
-        new_rot = tf.transformations.quaternion_multiply(curr_rot, rotation_quat) 
-
-        target_pose = Transform(translation=curr_pose, rotation=Rotation.from_quat(curr_rot))
-        rospy.loginfo(self.moveit.robot.get_link_names())
-        rospy.loginfo(f"curr_pose: {curr_pose}, curr_rot: {trans_rot[3:]}")
-
-        rospy.sleep(4.0)
-
-
-        self.toggle_integration(std_srvs.srv.SetBoolRequest(data=True))
-        rospy.sleep(1.0)
-
-        self.moveit.goto(target_pose)
 
         self.toggle_integration(std_srvs.srv.SetBoolRequest(data=False))
         

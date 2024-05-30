@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<launch>
+
+    <!-- Panda -->
+    <include file="$(find moma_gazebo)/launch/panda_grasp.launch">
+    </include>
+    <!-- Next best view ros run-->
+    <node pkg="next_best_view" type="next_best_view_node.py" name="next_best_view" output="screen"/>
+    <!--evaluation node-->
+    <node pkg="evaluation" type="evaluation_node.py" name="evaluation_node" output="screen" />
+
+</launch>

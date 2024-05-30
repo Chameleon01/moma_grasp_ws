@@ -21,6 +21,7 @@ class ResetNode(object):
         self.task_frame_id = rospy.get_param("moma_demo/task_frame_id")
         self.table_height = rospy.get_param("moma_demo/table_height")
         rospy.set_param("moma_demo/workspace", 0)
+        self.reset_joints = rospy.get_param("moma_demo/workspaces")[0]["scan_joints"][0]
         self.init_robot_connection()
         self.vis = Visualizer()
         self.cloud_pub = rospy.Publisher("/scene_cloud", sensor_msgs.msg.PointCloud2)
@@ -54,7 +55,7 @@ class ResetNode(object):
         if self.arm.has_error:
             self.arm.recover()
         self.gripper.release()
-        self.moveit.goto("ready", velocity_scaling=0.2)
+        self.moveit.goto(self.reset_joints, velocity_scaling=0.2)
 
     def broadcast_roi(self):
         l = 0.3
