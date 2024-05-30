@@ -15,7 +15,7 @@ import vpp_msgs.srv
 import vgn.srv
 import tf
 
-def move_to_viewpoint(init_trans, init_rot, ang_deg, object_pose=np.array([0.5, -0.05, 0.5])):
+def move_to_viewpoint(init_trans, init_rot, ang_deg, object_pose=np.array([0.6, 0, 0.5])):
     moveit_manip = MoveItClient("panda_manipulator")
     alpha = ang_deg*(np.pi/180) # convert highest_avg_azimuth in radians
     radius = object_pose[0] - init_trans[0]
@@ -59,7 +59,7 @@ def move():
     moveit_manip = MoveItClient("panda_manipulator")
 
     # move end effector to initial position
-    init_trans = np.array([0.3, 0.0, 0.6])
+    init_trans = np.array([0.3, 0.0, 0.65])
     init_ros = tf.transformations.quaternion_from_euler(0, -np.pi/2, np.pi)
     target_pose = Transform(translation=init_trans, rotation=Rotation.from_quat(init_ros))
     moveit_manip.goto(target_pose)
@@ -137,7 +137,11 @@ def get_joint_values():
     joint_values = moveit.move_group.get_current_joint_values()
     rospy.loginfo(joint_values)
 
+def move_init():
+    moveit_arm = MoveItClient("panda_arm")
+    init_pose = [1.0099570194674232, -1.692222709995713, -0.39451387234134483, -2.676419590979598, -1.2053577622836915, 1.8697722273445159, 1.4881047141400767]
 
+    moveit_arm.goto(init_pose, velocity_scaling=0.2)
 
 if __name__ == '__main__':
     rospy.init_node('move_end_effector_node', anonymous=True)

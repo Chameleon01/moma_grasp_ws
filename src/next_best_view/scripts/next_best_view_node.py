@@ -36,9 +36,7 @@ class NextBestView(object):
         self.moveit_arm = MoveItClient("panda_arm")
         self.init_trans = np.array([0.3, 0.0, 0.6])
         self.init_rot = tf.transformations.quaternion_from_euler(0, -np.pi/2, np.pi)
-        self.object_pose=np.array([0.5, -0.05, 0.5])
-
-        self.inference = True
+        self.object_pose=np.array([0.5, 0.0, 0.5])
 
     def init_pose(self):
         init_pose = [0.0, -1.2859993464471628, -0.0007797185767710602, -2.785808430007588, -0.0021583956237938295, 3.0701282814749877, 0.7863824527452925]
@@ -97,15 +95,12 @@ class NextBestView(object):
         rospy.sleep(0.5)
 
     def execute(self, goal):
-        self.idx_publisher.publish(self.img_count)
+        self.idx_publisher.publish(self.img_keys[self.img_count])
         rospy.sleep(2.0) # wait for spawn the model
-        predictions = load_zero1to3_predictions(self.img_count)
+        predictions = load_zero1to3_predictions(n_img=self.img_keys[self.img_count])
 
         # move the robot in initial position
         self.init_pose()
-
-        if self.inference:
-            return
 
         # apply gain information function to each image
         ratios = []

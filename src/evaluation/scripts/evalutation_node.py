@@ -5,11 +5,13 @@ import os
 from gazebo_msgs.srv import SpawnModel, DeleteModel
 from geometry_msgs.msg import Pose
 import rospkg
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, PointCloud2
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from time import sleep
 from std_msgs.msg import Int32  # Import Int32 message type
+import numpy as np
+import ros_numpy
 
 class ModelSpawner:
     def __init__(self):
@@ -25,7 +27,8 @@ class ModelSpawner:
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber("/wrist_camera/color/image_raw", Image, self.image_callback)
         self.int_sub = rospy.Subscriber("/spawn_model_idx", Int32, self.int_callback)  # Subscriber for integer messages
-        self.rate = rospy.Rate(1/20)  # 0.5 Hz, or every 2 seconds
+        self.int_sub = rospy.Subscriber("/quality", PointCloud2, self.analyse_quality)  # Subscriber for integer messages
+        self.rate = rospy.Rate(0.5)  # 0.5 Hz, or every 2 seconds
         self.img_capture = None
         self.new_image_received = False
         self.curr_model_idx = -1
@@ -44,6 +47,14 @@ class ModelSpawner:
             model_path = f"{self.package_path}/models/{model_name}/{model_name_sdf}.sdf"
             rospy.loginfo(model_path)
             self.spawn_model(model_name, model_path)
+
+            sleep(2)
+            # Wait for a new image to ensure it corresponds to the current model
+            while not self.new_image_received:
+                self.rate.sleep()
+            cv2.imwrite(f"img_raw/img{received_idx}.png", self.img_capture)
+            self.new_image_received = False  # Reset the flag after saving the image
+            self.rate.sleep()
             
 
         rospy.loginfo(f"Received integer: {received_idx}")
@@ -102,6 +113,18 @@ class ModelSpawner:
             cv2.imwrite(f"img_raw/img{i}.png", self.img_capture)
             self.new_image_received = False  # Reset the flag after saving the image
             self.rate.sleep()
+
+    def analyse_quality(self, msg):
+        pc_array = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
+        qualities = []
+        for vox in pc_array:
+            qualities.append(vox[3])
+
+        qualities = np.array(qualities)
+        rospy.loginfo(f"quality min: {np.min(qualities)}, quality max: {np.max(qualities)}")
+        # convert msg in numpy array
+
+
 
 if __name__ == '__main__':
     spawner = ModelSpawner()
