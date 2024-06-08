@@ -9,9 +9,11 @@ from sensor_msgs.msg import Image, PointCloud2
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from time import sleep
-from std_msgs.msg import Int32  # Import Int32 message type
+from std_msgs.msg import Int32, Float32MultiArray  # Import Int32 message type
 import numpy as np
 import ros_numpy
+import pandas as pd 
+from gazebo_msgs.msg import ModelStates
 
 class ModelSpawner:
     def __init__(self):
@@ -26,19 +28,27 @@ class ModelSpawner:
         self.last_model = ""
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber("/wrist_camera/color/image_raw", Image, self.image_callback)
-        self.int_sub = rospy.Subscriber("/spawn_model_idx", Int32, self.int_callback)  # Subscriber for integer messages
-        self.int_sub = rospy.Subscriber("/quality", PointCloud2, self.analyse_quality)  # Subscriber for integer messages
+        self.idx_sub= rospy.Subscriber("/spawn_model_idx", Float32MultiArray, self.int_callback)  # Subscriber for integer messages
+        self.quality_sub = rospy.Subscriber("/quality", PointCloud2, self.analyse_quality)  # Subscriber for integer messages
+        self.model_state_sub = rospy.Subscriber('/gazebo/model_states', ModelStates, self.model_state_callback)
+        self.object_position = Pose()
         self.rate = rospy.Rate(0.5)  # 0.5 Hz, or every 2 seconds
         self.img_capture = None
         self.new_image_received = False
         self.curr_model_idx = -1
+        self.data_frame = pd.DataFrame(columns=["mode","quality_arr", "model_idx", "min_quality", "max_quality", "mean_quality", "std_quality", "grasp_success"])
+        self.model_names = self.list_model_directories()
+        self.mode = 0
+        self.run_num = 0
 
     def int_callback(self, msg):
         """ Callback function for handling incoming integer messages """
-        received_idx = msg.data
+        data = msg.data
+        received_idx = data[0]
         if received_idx != self.curr_model_idx:
-            self.curr_model_idx = received_idx
-            model_names = self.list_model_directories()
+            self.curr_model_idx = int(received_idx)
+            self.mode = int(data[1])
+            model_names = self.model_names
             for model_name in model_names:
                 self.delete_model(model_name)
 
@@ -56,8 +66,12 @@ class ModelSpawner:
             self.new_image_received = False  # Reset the flag after saving the image
             self.rate.sleep()
             
+        if int(data[2]) > self.run_num:
+            self.run_num  = int(data[2])
+            self.data_frame = pd.DataFrame(columns=["mode","quality_arr", "model_idx", "min_quality", "max_quality", "mean_quality", "std_quality", "grasp_success"])
 
         rospy.loginfo(f"Received integer: {received_idx}")
+
 
     def list_model_directories(self):
         """ Returns a list of directories in the specified path """
@@ -93,7 +107,7 @@ class ModelSpawner:
         self.new_image_received = True
 
     def run(self):
-        model_names = self.list_model_directories()
+        model_names = self.model_names
         for model_name in model_names:
             self.delete_model(model_name)
 
@@ -116,15 +130,36 @@ class ModelSpawner:
 
     def analyse_quality(self, msg):
         pc_array = ros_numpy.point_cloud2.pointcloud2_to_array(msg)
+        if len(pc_array) == 0:
+            rospy.loginfo("No point cloud data received")
+            return
         qualities = []
         for vox in pc_array:
             qualities.append(vox[3])
 
         qualities = np.array(qualities)
-        rospy.loginfo(f"quality min: {np.min(qualities)}, quality max: {np.max(qualities)}")
-        # convert msg in numpy array
+        quality_data = {"mode": self.mode, "grasp_success": 0, "quality_arr": qualities,"model_idx": self.curr_model_idx, "min_quality": np.min(qualities), "max_quality": np.max(qualities), "mean_quality": np.mean(qualities), "std_quality": np.std(qualities)}
+        for key, value in quality_data.items():
+            quality_data[key] = [value]
+        self.data_frame  = pd.concat([self.data_frame , pd.DataFrame(quality_data)], ignore_index=True)
 
+        rospy.loginfo(f"quality min: {np.min(qualities)}, quality max: {self.data_frame}")
 
+        # save df to csv
+        self.data_frame.to_csv(f"/root/moma_ws/data_plotting/eval_data_{self.run_num}.csv", index=False)
+
+    def model_state_callback(self, msg):
+        """ Callback function for handling model states """
+        try:
+            index = msg.name.index(self.model_names[self.curr_model_idx])  # Replace 'your_object_name' with the actual name
+            self.object_position = msg.pose[index]
+            if self.object_position.position.z >= 0.55:
+                # select the row of data_frame where model_idx is equal to self.curr_model_idx and update the value of grasp_scucess to 1
+                self.data_frame.loc[self.data_frame['model_idx'] == self.curr_model_idx, 'grasp_success'] = 1
+                rospy.loginfo(f"Grasped object { self.object_position.position.z}")
+            
+        except ValueError:
+            pass
 
 if __name__ == '__main__':
     spawner = ModelSpawner()

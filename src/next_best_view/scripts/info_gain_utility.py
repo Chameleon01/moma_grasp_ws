@@ -20,14 +20,17 @@ def preprocess_image(src):
     _, src_gray = cv.threshold(blurred, 240, 255, cv.THRESH_BINARY_INV)
     
     # Save the grayscale image (optional)
-    cv.imwrite("out1.png", gray)
     return src_gray
+
 
 def find_and_draw_contours(src_gray):
     """ Find contours, calculate and display contours and hulls with their area difference ratio. """
     canny_output = cv.Canny(src_gray, 100, 200)  # Fixed threshold values
+    kernel = np.ones((3,3), np.uint8)
+    canny_output = cv.morphologyEx(canny_output, cv.MORPH_CLOSE, kernel)
     contours, hierarchy = cv.findContours(canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     drawing = np.zeros((src_gray.shape[0], src_gray.shape[1], 3), dtype=np.uint8)
+    countour_object = None
 
     # Find the index of the outermost contour (parent contour with no parent in hierarchy)
     if hierarchy is not None and len(hierarchy) > 0:
@@ -36,29 +39,31 @@ def find_and_draw_contours(src_gray):
             # h[3] == -1 indicates that the contour has no parent
             if h[3] == -1:
                 # This contour has no parent, so it's an outer contour
-                ratio = draw_and_print_contour_properties(drawing, contours[i])
+                countour_object = contours[i]
 
-    # cv.imshow('Contours and Convex Hulls', drawing)
-    # cv.waitKey(0)  # Wait for a key press to close the displayed window
-    # cv.destroyAllWindows()
+    # close gaps in the contour
+    epsilon = 0.001 * cv.arcLength(countour_object, True)
+    countour_object = cv.approxPolyDP(countour_object, epsilon, True)
+    ratio, hull = draw_and_print_contour_properties(drawing, countour_object)
+    cv.drawContours(drawing, [countour_object], -1, (0, 255, 0), 1)  # Contour in green
+    cv.drawContours(drawing, [hull], -1, (255,255,255), 1)           # Hull in red color
     return drawing, ratio
 
 def draw_and_print_contour_properties(drawing, contour):
     """ Draw contour and its convex hull, and compute area difference ratio. """
+    # print(f'Contour: {contour.shape}')
     contour_area = cv.contourArea(contour)
     hull = cv.convexHull(contour)
     hull_area = cv.contourArea(hull)
     area_difference_ratio = (hull_area - contour_area) / hull_area if hull_area != 0 else 0
+    print(hull_area, contour_area, area_difference_ratio)
 
     # Display area difference ratio
     # print(f'Area Difference Ratio: {area_difference_ratio:.2f}')
 
     # Draw contour and hull points for visualization
-    color = (rng.randint(0, 256), rng.randint(0, 256), rng.randint(0, 256))
-    cv.drawContours(drawing, [contour], -1, (0, 255, 0), 1)  # Contour in green
-    cv.drawContours(drawing, [hull], -1, color, 1)           # Hull in random color
 
-    return area_difference_ratio
+    return area_difference_ratio, hull
 
 def calculate_entropy(image):
     """ Calculate the entropy of an image. """

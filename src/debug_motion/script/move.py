@@ -15,7 +15,7 @@ import vpp_msgs.srv
 import vgn.srv
 import tf
 
-def move_to_viewpoint(init_trans, init_rot, ang_deg, object_pose=np.array([0.6, 0, 0.5])):
+def move_to_viewpoint(init_trans, init_rot, ang_deg, object_pose=np.array([0.5, 0, 0.5])):
     moveit_manip = MoveItClient("panda_manipulator")
     alpha = ang_deg*(np.pi/180) # convert highest_avg_azimuth in radians
     radius = object_pose[0] - init_trans[0]
@@ -36,13 +36,15 @@ def move_to_viewpoint(init_trans, init_rot, ang_deg, object_pose=np.array([0.6, 
 
     # rotation rotate around x and y axis
     # y_anglle based on radius and z distance from object
-    y_ang = np.arctan((init_trans[2]-object_pose[2])/radius)
+    offset = 5 * (np.pi/180)
+    y_ang = np.arctan((init_trans[2]-object_pose[2])/radius) + offset
     q = tf.transformations.quaternion_from_euler(alpha, -y_ang, 0)
 
     trans = [-x_trans, -y_trans, z_trans]
 
     new_trans = init_trans+trans
     new_rot = tf.transformations.quaternion_multiply(init_rot,  q) 
+    # new_rot = tf.transformations.quaternion_multiply(new_rot,  tf.transformations.quaternion_from_euler(0, 0, np.pi/6)) 
 
     target_pose = Transform(translation=new_trans, rotation=Rotation.from_quat(new_rot))
     moveit_manip.gotoL(target_pose)
@@ -59,7 +61,7 @@ def move():
     moveit_manip = MoveItClient("panda_manipulator")
 
     # move end effector to initial position
-    init_trans = np.array([0.3, 0.0, 0.65])
+    init_trans = np.array([0.3, 0.0, 0.60])
     init_ros = tf.transformations.quaternion_from_euler(0, -np.pi/2, np.pi)
     target_pose = Transform(translation=init_trans, rotation=Rotation.from_quat(init_ros))
     moveit_manip.goto(target_pose)
@@ -74,8 +76,9 @@ def move():
     rospy.loginfo("current trans: %s", curr_trans)
     rospy.loginfo("current rot: %s", curr_rot)
     move_to_viewpoint(init_trans=curr_trans, init_rot=curr_rot, ang_deg=0)
-    # for ang in range(-90, 100, 10):
-    #     move_to_viewpoint(init_trans=curr_trans, init_rot=curr_rot, ang_deg=ang)
+    # move_to_viewpoint(init_trans=curr_trans, init_rot=curr_rot, ang_deg=-90)
+    for ang in range(-90, 100, 10):
+        move_to_viewpoint(init_trans=curr_trans, init_rot=curr_rot, ang_deg=ang)
 
 def move_old():
     moveit_manip = MoveItClient("panda_manipulator")

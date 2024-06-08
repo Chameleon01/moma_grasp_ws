@@ -98,13 +98,16 @@ class ReconstructSceneNode(object):
         client.wait_for_server()
 
         # Create and send the goal to the action server
-        self.toggle_integration(std_srvs.srv.SetBoolRequest(data=True))
-        rospy.sleep(1.0)
-        
+
         action_goal = GetNextBestViewGoal()
         action_goal.image = self.captured_image  # Use the captured image as the goal
         client.send_goal(action_goal)
+        rospy.sleep(2.0)
+        self.toggle_integration(std_srvs.srv.SetBoolRequest(data=True))
+        
         client.wait_for_result()
+      
+        
 
         # Get the result from the action server
         result = client.get_result()

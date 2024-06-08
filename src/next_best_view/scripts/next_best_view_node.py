@@ -15,6 +15,8 @@ from std_msgs.msg import Int32
 
 from moma_utils.ros.moveit import MoveItClient
 from moma_utils.spatial import Transform, Rotation
+import random
+
 
 # min max scaling of metrics
 def min_max_scale(metrics):
@@ -27,9 +29,9 @@ class NextBestView(object):
         self.server = actionlib.SimpleActionServer('get_next_best_view', GetNextBestViewAction, self.execute, False)
         self.server.start()
         self.bridge = CvBridge()
-        self.img_count = 9
-        self.img_keys = get_img_keys()
-        self.idx_publisher = rospy.Publisher('/spawn_model_idx', Int32, queue_size=10)
+        self.img_count = 0
+        self.img_keys = get_img_keys(selected=True)
+        self.idx_publisher = rospy.Publisher('/spawn_model_idx', Float32MultiArray)
         rospy.loginfo(f'Image keys: {self.img_keys}')
 
         self.moveit_manip = MoveItClient("panda_manipulator")
@@ -37,6 +39,9 @@ class NextBestView(object):
         self.init_trans = np.array([0.3, 0.0, 0.6])
         self.init_rot = tf.transformations.quaternion_from_euler(0, -np.pi/2, np.pi)
         self.object_pose=np.array([0.5, 0.0, 0.5])
+
+        self.curr_mode = 0 # "best": 0, "static": 1, "random": 2
+        self.run_num = 5
 
     def init_pose(self):
         init_pose = [0.0, -1.2859993464471628, -0.0007797185767710602, -2.785808430007588, -0.0021583956237938295, 3.0701282814749877, 0.7863824527452925]
@@ -72,13 +77,14 @@ class NextBestView(object):
         # y_trans = b*np.sin(t)
 
         # shift the trajectory in x and y in order to center the object spwaned
-        rospy.loginfo("curret pos: %s", self.moveit_manip.move_group.get_current_pose().pose.position.x)
         x_trans -= self.object_pose[0] - self.init_trans[0]
         y_trans -= self.object_pose[1] - self.init_trans[1]
 
         # rotation rotate around x and y axis
         # y_anglle based on radius and z distance from object
-        offset = 5 * (np.pi/180)
+        offset = 10 * (np.pi/180)
+        if abs(ang_deg) >= 80:
+            offset *= 4
         y_ang = np.arctan((self.init_trans[2]-self.object_pose[2])/radius) + offset
         q = tf.transformations.quaternion_from_euler(alpha, -y_ang, 0)
 
@@ -86,16 +92,28 @@ class NextBestView(object):
 
         new_trans = self.init_trans+trans
         new_rot = tf.transformations.quaternion_multiply(self.init_rot,  q) 
+        # new_rot = tf.transformations.quaternion_multiply(new_rot,  tf.transformations.quaternion_from_euler(0, 0, np.pi/4)) 
 
         target_pose = Transform(translation=new_trans, rotation=Rotation.from_quat(new_rot))
         self.moveit_manip.goto(target_pose)
-        rospy.loginfo("target pose: %s", new_trans)
-        rospy.loginfo("curr angle: %s", ang_deg)
         
         rospy.sleep(0.5)
 
     def execute(self, goal):
-        self.idx_publisher.publish(self.img_keys[self.img_count])
+        if self.img_count >= len(self.img_keys):
+            self.img_count = 0
+            self.curr_mode += 1
+            rospy.loginfo(f'Current mode: {self.curr_mode}')
+        if self.curr_mode > 2:
+            rospy.loginfo('All modes have been executed, proceeding next run.')
+            self.curr_mode = 0
+            self.run_num += 1
+            return
+            
+        
+        spawn_msg = Float32MultiArray()
+        spawn_msg.data = [self.img_keys[self.img_count], self.curr_mode, self.run_num]
+        self.idx_publisher.publish(spawn_msg)
         rospy.sleep(2.0) # wait for spawn the model
         predictions = load_zero1to3_predictions(n_img=self.img_keys[self.img_count])
 
@@ -114,6 +132,8 @@ class NextBestView(object):
             # Convert ROS Image message to an OpenCV image
             cv_image = predictions[index]['image']
             az = predictions[index]['azimuth']
+            if az in [-80, 80]:
+                continue
 
             # get metrics
             src_gray = preprocess_image(cv_image)
@@ -129,9 +149,8 @@ class NextBestView(object):
             azimuths.append(az)
 
             # Construct a filename and save the image
-            img_filename = os.path.join("temp", f'image_{index}.jpg')
+            img_filename = os.path.join("temp", f'/root/moma_ws/src/temp/img_{self.img_keys[self.img_count]}.{az}.png')
             cv2.imwrite(img_filename, draw)
-            rospy.loginfo(f'Saved {img_filename}')
             
         # min max scale metrics
         ratios = min_max_scale(ratios)
@@ -146,7 +165,15 @@ class NextBestView(object):
         highest_avg_azimuth = azimuths[highest_avg_index]
         rospy.loginfo(f'Highest average metric: {max(avg_metrics):.2f} at azimuth: {highest_avg_azimuth:.2f}')
 
-        self.move_to_view(highest_avg_azimuth)
+        if self.curr_mode == 0:
+            self.move_to_view(highest_avg_azimuth)
+        elif self.curr_mode == 1:
+            self.move_to_view(0)    
+        elif self.curr_mode == 2:
+            self.move_to_view(random.randint(-90, 90))
+
+
+        rospy.sleep(1.0)
 
         # Set the result of the action
         output_array = [0]
