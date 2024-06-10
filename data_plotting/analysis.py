@@ -8,6 +8,16 @@ def clean_array(x):
     array = np.fromstring(number_string, sep=' ')
     return array
 
+model_idxs_init = [3, 7, 8, 11, 18, 19,20, 28,32, 41, 44, 45, 48, 49, 50]
+models_names = ['051_large_clamp', '065-i_cups', '048_hammer', '033_spatula', '037_scissors', '063-a_marbles', '072-k_toy_airplane', '031_spoon', '044_flat_screwdriver', '019_pitcher_base', '035_power_drill', '032_knife', '006_mustard_bottle', '025_mug', '043_phillips_screwdriver']
+print(len(model_idxs_init))
+df_to_export = pd.DataFrame({"model_idx":model_idxs_init, "model_name":models_names})
+df_to_export.to_csv("model_idx_to_name.csv", index=False)  
+
+# convert model_idxs_init and models_names to dictionary
+model_dict = dict(zip(model_idxs_init, models_names))
+
+
 # Load data
 data_over_runs = {"run":[],"mode":[], "grasped_model_idx":[],"avg_quality":[], "avg_quality_arr_len": [], "avg_max_quality":[], "avg_min_quality":[], "avg_std_quality":[], "grasp_success_count":[]}
 for run in range(1,47):
@@ -124,24 +134,30 @@ model_idxs_1 = x + width
 model_idxs_2 = x - width
 
 # Create the plot
+# set size of the plot
 fig, ax = plt.subplots()
 ax.bar(model_idxs_0, mode_0, width=width, label='Best view')
 ax.bar(model_idxs_1, mode_1, width=width, label='Static view')
 ax.bar(model_idxs_2, mode_2, width=width, label='Random view')
 
 # Add labels, title, and legend
-ax.set_xlabel('Category')
-ax.set_ylabel('Counts')
-ax.set_title('Comparison of Views')
+ax.set_xlabel('Model Index')
+ax.set_ylabel('Number of successful grasps')
+ax.set_title('Total successful grasps per model across all runs')
 
 # Set x-ticks to the middle of the groups
 ax.set_xticks(x)
 ax.set_xticklabels(model_idxs)  # Set actual model indices as x-tick labels
+# ax.set_xticklabels([model_dict[idx] for idx in model_idxs])  # Set actual model indices as x-tick labels
 
 ax.autoscale(tight=False)
 ax.legend()
 
+#set figure size with width as an A4 paper
+fig.set_size_inches(9.7, 5.6)
+
 # Show the plot
+plt.savefig("figures/grasp_success_count.png")
 plt.show()
 
 
@@ -178,11 +194,15 @@ for i, mean in enumerate(means, start=1):
 for i, (min_val, max_val) in enumerate(zip(mins, maxs), start=1):
     plt.plot([i, i], [min_val, max_val], color='blue', linestyle='-', marker='_', markersize=10)
 
+#set siye of the plot
+plt.gcf().set_size_inches(9.7, 5.6)
+
 # Adding labels and title
-plt.xlabel('Modes')
-plt.ylabel('Quality Array Length')
-plt.title('Quality Array Length by Mode')
+plt.xlabel('Policy')
+plt.ylabel('Quality Tensor Size')
+plt.title('Quality Tensor Size by Policy')
 plt.suptitle('')  # Clear the automatic suptitle that Pandas might add
+plt.savefig("figures/quality_array_length_stats.png")
 plt.show()
 
 
@@ -219,9 +239,12 @@ for i, mean in enumerate(means, start=1):
 for i, (min_val, max_val) in enumerate(zip(mins, maxs), start=1):
     plt.plot([i, i], [min_val, max_val], color='blue', linestyle='-', marker='_', markersize=10)
 
+plt.gcf().set_size_inches(9.7, 5.6)
+
 # Adding labels and title
-plt.xlabel('Modes')
-plt.ylabel('Quality Array Length')
-plt.title('Quality Array Length by Mode')
+plt.xlabel('Policy')
+plt.ylabel('Number of successful grasps')
+plt.title('Number of successful grasps by policy per run')
 plt.suptitle('')  # Clear the automatic suptitle that Pandas might add
+plt.savefig("figures/grasp_success_count_stats.png")
 plt.show()

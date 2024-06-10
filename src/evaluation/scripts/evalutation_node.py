@@ -38,6 +38,10 @@ class ModelSpawner:
         self.curr_model_idx = -1
         self.data_frame = pd.DataFrame(columns=["mode","quality_arr", "model_idx", "min_quality", "max_quality", "mean_quality", "std_quality", "grasp_success"])
         self.model_names = self.list_model_directories()
+        sel_models = []
+        for idx in [3, 7, 8, 11, 18, 19,20, 28,32, 41, 44, 45, 48, 49, 50]:
+            sel_models.append(self.model_names[idx])
+        rospy.loginfo(f"Model names: {sel_models}")
         self.mode = 0
         self.run_num = 0
 
