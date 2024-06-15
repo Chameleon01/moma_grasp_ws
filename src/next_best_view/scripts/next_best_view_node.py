@@ -48,19 +48,6 @@ class NextBestView(object):
         init_pose = [1.0099570194674232, -1.692222709995713, -0.39451387234134483, -2.676419590979598, -1.2053577622836915, 1.8697722273445159, 1.4881047141400767]
         self.moveit_arm.goto(init_pose, velocity_scaling=0.2)
 
-        # move end effector to initial position
-        # target_pose = Transform(translation=self.init_trans, rotation=Rotation.from_quat(self.init_rot))
-        # self.moveit_manip.goto(target_pose)
-
-        # curr_trans = np.array([self.moveit_manip.move_group.get_current_pose().pose.position.x, 
-        #                     self.moveit_manip.move_group.get_current_pose().pose.position.y,
-        #                     self.moveit_manip.move_group.get_current_pose().pose.position.z])
-        # curr_rot = np.array([self.moveit_manip.move_group.get_current_pose().pose.orientation.x,
-        #                     self.moveit_manip.move_group.get_current_pose().pose.orientation.y,
-        #                     self.moveit_manip.move_group.get_current_pose().pose.orientation.z,
-        #                     self.moveit_manip.move_group.get_current_pose().pose.orientation.w])
-        # rospy.loginfo("current trans: %s", curr_trans)
-        # rospy.loginfo("current rot: %s", curr_rot)  
         self.move_to_view(0)
 
     def move_to_view(self, ang_deg):
@@ -100,6 +87,7 @@ class NextBestView(object):
         rospy.sleep(0.5)
 
     def execute(self, goal):
+        # -- for evaluation purposes --
         if self.img_count >= len(self.img_keys):
             self.img_count = 0
             self.curr_mode += 1
@@ -109,12 +97,21 @@ class NextBestView(object):
             self.curr_mode = 0
             self.run_num += 1
             return
-            
         
         spawn_msg = Float32MultiArray()
         spawn_msg.data = [self.img_keys[self.img_count], self.curr_mode, self.run_num]
         self.idx_publisher.publish(spawn_msg)
         rospy.sleep(2.0) # wait for spawn the model
+        # -- ---------------------- --
+    
+        # call zero 1 to 3 node if available else load pre-saved predictions
+        # convert image to cv2
+        img = goal.image
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(img, "bgr8")
+        except CvBridgeError as e:
+            rospy.logerr(e)
+
         predictions = load_zero1to3_predictions(n_img=self.img_keys[self.img_count])
 
         # move the robot in initial position
@@ -175,12 +172,12 @@ class NextBestView(object):
 
         rospy.sleep(1.0)
 
-        # Set the result of the action
+        # Set the result of the action, not needed for now
         output_array = [0]
 
         # Create the result message
         result = GetNextBestViewResult()
-        result.output.data = output_array  # Ensure this matches the name in your action definition
+        result.output.data = output_array 
         self.server.set_succeeded(result)
 
         self.img_count += 1

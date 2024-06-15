@@ -1,2 +1,0 @@
-mode,quality_arr,model_idx,min_quality,max_quality,mean_quality,std_quality,grasp_success
-2,[0.91489726 0.91517836 0.90157664 0.91043514],8,0.90157664,0.91517836,0.91052186,0.005496627,0

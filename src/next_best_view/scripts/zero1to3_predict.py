@@ -21,7 +21,7 @@ def get_img_keys(selected=False):
     # get the file name list in the directory img_predictions 
     # [3, 7, 8, 11, 18, 19,20, 28,32, 41, 44, 45, 48, 49, 50],[49] mug
     if selected:
-        return [3, 7, 8, 11, 18, 19,20, 28,32, 41, 44, 45, 48, 49, 50] 
+        return [11] 
     file_names = os.listdir('/root/moma_ws/src/next_best_view/scripts/img_predictions')
     file_names = [f.split(".") for f in file_names]
     file_names = [f[0].replace("output", "") for f in file_names]
